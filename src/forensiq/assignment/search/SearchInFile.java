@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -30,10 +31,12 @@ public class SearchInFile {
 
     private final String file_name;
     private final Path path;
+    private final Predicate<Either<Pair<Integer, LogLine>, String>> filter;
 
-    public SearchInFile(Path path) {
+    public SearchInFile(Path path, Predicate<LogLine> filter) {
         this.path = path;
         file_name = path.toString();
+        this.filter = (maybe_pair) -> maybe_pair.is_success && filter.test(maybe_pair.asSuccess().second);
     }
 
     // TODO: handle IO errors
@@ -51,7 +54,8 @@ public class SearchInFile {
             Runnable close_reader = () -> { try { numbering_reader.close(); } catch (IOException ignore) { } };
             return StreamSupport.stream(Spliterators.spliterator(
                     new LineIterator(numbering_reader), 1, Spliterator.IMMUTABLE | Spliterator.NONNULL), false)
-                    .onClose(close_reader);  // We can Stream.close() and the reader and file will close, too.
+                    .onClose(close_reader)  // We can Stream.close() and the reader and file will close, too.
+                    .filter(filter);
         } catch (FileNotFoundException e) {
             return Stream.of(fail("Cannot start reading " + file_name + ": " + e));
         }
@@ -66,7 +70,8 @@ public class SearchInFile {
         int offset = 0;
         final int max_offset = line.length() - 1;
         while (offset < max_offset && matcher.find(offset)) {
-            sb.add(succeed(new Hit(file_name, line, numbered_line.first, matcher.start(), matcher.end())));
+            sb.add(succeed(new Hit(file_name, line, numbered_line.first, matcher.start(), matcher.end(),
+                    numbered_line.second.timestamp)));
             offset = matcher.end() + 1;
         }
         return sb.build();

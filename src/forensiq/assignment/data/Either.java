@@ -1,7 +1,5 @@
 package forensiq.assignment.data;
 
-import java.util.function.Function;
-
 /**
  * Encode two possible outcomes, success and failure.
  */
@@ -38,14 +36,4 @@ public class Either<S, F> {
         return is_success ? "Success: " + asSuccess() : "Failure: " + asFailure();
     }
 
-    /**
-     * Only apply {@code next} if {@code this} is successful., otherwise re-wrap the failure.
-     * */
-    public <S2> Either<S2, F> fmap(Function<S, S2> next) {
-        if (is_success) {
-            return Either.succeed(next.apply(_success));
-        } else {
-            return Either.fail(_failure);
-        }
-    }
 }

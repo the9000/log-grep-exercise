@@ -26,6 +26,7 @@ public class LogLine {
     }
 
     public static LogLine fromLine(final String line) {
+        // NOTE: this is expensive; it slowed things down 3x.
         String[] pieces = split_pattern.split(line, 6);
         if (pieces.length >= 5) {
             final String host = pieces[0];
