@@ -5,7 +5,6 @@ import forensiq.assignment.data.Either;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,16 +33,11 @@ public class TreeWalk {
                     newDirectoryStream(path, file_path -> Files.isDirectory(file_path)).spliterator(), false)
                     .map(is_readable);
             Function<Either<Path, String>, Stream<Either<Path, String>>> to_substream = (path_result) ->
-                    path_result.is_success ? filesFirst(path_result.asSuccess()) :
-                            streamOfOne(path_result);
+                    path_result.is_success ? filesFirst(path_result.asSuccess()) : Stream.of(path_result);
             return dir_stream.collect(Collectors.reducing(file_stream, to_substream, Stream::concat));
         } catch (IOException e) {
-            return streamOfOne(Either.fail("Failed to list files in " + path + ": " + e));
+            return Stream.of(Either.fail("Failed to list files in " + path + ": " + e));
         }
-    }
-
-    static <T> Stream <T> streamOfOne(T element) {
-        return StreamSupport.stream(Collections.singletonList(element).spliterator() , false);
     }
 }
 

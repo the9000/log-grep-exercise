@@ -39,11 +39,11 @@ public class Either<S, F> {
     }
 
     /**
-     * Only apply {@code next} if {@code this} is successful.
+     * Only apply {@code next} if {@code this} is successful., otherwise re-wrap the failure.
      * */
-    public <S2> Either<S2, F> then(Function<S, Either<S2, F>> next) {
+    public <S2> Either<S2, F> fmap(Function<S, S2> next) {
         if (is_success) {
-            return next.apply(_success);
+            return Either.succeed(next.apply(_success));
         } else {
             return Either.fail(_failure);
         }
