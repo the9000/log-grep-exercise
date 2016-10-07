@@ -1,6 +1,7 @@
 package forensiq.assignment.search;
 
 import forensiq.assignment.data.Either;
+import forensiq.assignment.data.LogLine;
 import forensiq.assignment.data.Pair;
 
 import java.io.*;
@@ -44,7 +45,7 @@ public class SearchInFile {
         });
     }
 
-    private Stream<Either<Pair<Integer, String>, String>> numberedLines(File file) {
+    private Stream<Either<Pair<Integer, LogLine>, String>> numberedLines(File file) {
         try {
             final LineNumberReader numbering_reader = new LineNumberReader(new FileReader(file));
             Runnable close_reader = () -> { try { numbering_reader.close(); } catch (IOException ignore) { } };
@@ -56,10 +57,11 @@ public class SearchInFile {
         }
     }
 
-    private Stream<Either<Hit, String>> findInLine(final Pair<Integer, String> numbered_line, Pattern regexp) {
+    private Stream<Either<Hit, String>> findInLine(final Pair<Integer, LogLine> numbered_line, Pattern regexp) {
         // We assume that we have enough RAM to store all the hits in a line.
         Stream.Builder<Either<Hit, String>> sb = Stream.builder();
-        final String line = numbered_line.second;
+        // NOTE: we ignore the host part fpr matching. The task concentrates on request paths.
+        final String line = numbered_line.second.rest;
         Matcher matcher = regexp.matcher(line);
         int offset = 0;
         final int max_offset = line.length() - 1;
@@ -71,9 +73,9 @@ public class SearchInFile {
     }
 
     // TODO: think about bolting line numbering to Files.lines() stream.
-    private class LineIterator implements Iterator<Either<Pair<Integer, String>, String>> {
+    private class LineIterator implements Iterator<Either<Pair<Integer, LogLine>, String>> {
         private final LineNumberReader reader;
-        private Either<Pair<Integer, String>, String> latest_item;
+        private Either<Pair<Integer, LogLine>, String> latest_item;
         private boolean still_going = true;
 
         LineIterator(LineNumberReader numbering_reader) {
@@ -85,7 +87,7 @@ public class SearchInFile {
             try {
                 String line = reader.readLine();
                 if (line != null) {
-                    latest_item = succeed(new Pair<>(reader.getLineNumber(), line));
+                    latest_item = succeed(new Pair<>(reader.getLineNumber(), LogLine.fromLine(line)));
                     still_going = true;  // Not needed, stays here for symmetry.
                 } else {
                     latest_item = fail("Iterating past end, if you see it it's a bug");
@@ -111,9 +113,9 @@ public class SearchInFile {
         }
 
         @Override
-        public Either<Pair<Integer, String>, String> next() {
+        public Either<Pair<Integer, LogLine>, String> next() {
             if (hasNext()) {
-                final Either<Pair<Integer, String>, String> result = latest_item;
+                final Either<Pair<Integer, LogLine>, String> result = latest_item;
                 latest_item = null; // Allow to proceed.
                 if (! result.is_success) {
                     // The last fetch ended up in an error. Stop proceeding.
