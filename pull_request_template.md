@@ -1,5 +1,5 @@
 ### :arrow_up: `[JIRA-TICKET] Ticket title goes here`
-_Write or edit the PR title to match._
+<font color="#88">_Write or edit the PR title to match._</font>
 
 ----
 _If work in progress:_
