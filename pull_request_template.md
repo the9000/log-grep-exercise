@@ -1,8 +1,9 @@
-## :arrow_up: `[JIRA-TICKET] Ticket title goes here`
+### :arrow_up: `[JIRA-TICKET] Ticket title goes here`
+_Write or edit the PR title to match._
 
 ----
 _If work in progress:_
-## :construction: WORK IN PROGRESS
+### :construction: WORK IN PROGRESS
 ----
 
 _The body is a description of changes. Use a list._ :arrow_down:
